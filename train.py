@@ -74,7 +74,7 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
         print('We only implemented C3D and R2Plus1D models.')
         raise NotImplementedError
     criterion = nn.CrossEntropyLoss()  # standard crossentropy loss for classification
-    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=5e-3)
+    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=7e-2)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10,
                                           gamma=1)  # the scheduler divides the lr by 10 every 10 epochs
 
@@ -96,9 +96,9 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
     writer = SummaryWriter(log_dir=log_dir)
 
     print('Training model on {} dataset...'.format(dataset))
-    train_dataloader = DataLoader(VideoDataset(dataset=dataset, split='train', clip_len=10), batch_size=5, shuffle=True, num_workers=4)
-    val_dataloader   = DataLoader(VideoDataset(dataset=dataset, split='val', clip_len=10), batch_size=5, num_workers=4)
-    test_dataloader  = DataLoader(VideoDataset(dataset=dataset, split='test', clip_len=10), batch_size=5, num_workers=4)
+    train_dataloader = DataLoader(VideoDataset(dataset=dataset, split='train', clip_len=10), batch_size=2, shuffle=True, num_workers=4)
+    val_dataloader   = DataLoader(VideoDataset(dataset=dataset, split='val', clip_len=10), batch_size=2, num_workers=4)
+    test_dataloader  = DataLoader(VideoDataset(dataset=dataset, split='test', clip_len=10), batch_size=2, num_workers=4)
     # for i,data in enumerate(train_dataloader):
     #   inputs,labels = data
     #   inputs,labels = Variable(inputs),Variable(labels)
