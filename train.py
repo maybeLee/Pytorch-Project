@@ -74,7 +74,7 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
         print('We only implemented C3D and R2Plus1D models.')
         raise NotImplementedError
     criterion = nn.CrossEntropyLoss()  # standard crossentropy loss for classification
-    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=1e-1)
+    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=1e-2)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10,
                                           gamma=1)  # the scheduler divides the lr by 10 every 10 epochs
 
@@ -96,16 +96,16 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
     writer = SummaryWriter(log_dir=log_dir)
 
     print('Training model on {} dataset...'.format(dataset))
-    train_dataloader = DataLoader(VideoDataset(dataset=dataset, split='train', clip_len=10), batch_size=2, shuffle=True, num_workers=4)
-    val_dataloader   = DataLoader(VideoDataset(dataset=dataset, split='val', clip_len=10), batch_size=2, num_workers=4)
-    test_dataloader  = DataLoader(VideoDataset(dataset=dataset, split='test', clip_len=10), batch_size=2, num_workers=4)
+    train_dataloader = DataLoader(VideoDataset(dataset=dataset, split='train', clip_len=10), batch_size=5, shuffle=True, num_workers=4)
+    val_dataloader   = DataLoader(VideoDataset(dataset=dataset, split='val', clip_len=10), batch_size=5, num_workers=4)
+    # test_dataloader  = DataLoader(VideoDataset(dataset=dataset, split='test', clip_len=10), batch_size=5, num_workers=4)
     # for i,data in enumerate(train_dataloader):
     #   inputs,labels = data
     #   inputs,labels = Variable(inputs),Variable(labels)
     #   print(i,"input",inputs.data.size(),"labels",labels.data.size())
     trainval_loaders = {'train': train_dataloader, 'val': val_dataloader}
     trainval_sizes = {x: len(trainval_loaders[x].dataset) for x in ['train', 'val']}
-    test_size = len(test_dataloader.dataset)
+    # test_size = len(test_dataloader.dataset)
     total_loss = {'Train':[],'Val':[]}
     total_accur = {'Train':[],'Val':[]}
     for epoch in range(resume_epoch, num_epochs):
@@ -131,17 +131,16 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
                 inputs = Variable(inputs, requires_grad=True).to(device)
                 labels = Variable(labels).to(device)
                 optimizer.zero_grad()
-
+                loss1 = 0
                 if phase == 'train':
-                    outputs = model(inputs)
+                    (outputs, loss1) = model(inputs)
                 else:
                     with torch.no_grad():
-                        outputs = model(inputs)
+                        outputs, loss1 = model(inputs)
 
                 probs = nn.Softmax(dim=1)(outputs)
                 preds = torch.max(probs, 1)[1]
-                loss = criterion(outputs, labels)
-                # loss += reg*C3D_model.l1_penalty(train_params[0]['params'])
+                loss = loss1 + criterion(outputs, labels)
 
                 if phase == 'train':
                     loss.backward()
@@ -176,35 +175,35 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
             }, os.path.join(save_dir, 'models', saveName + '_epoch-' + str(epoch) + '.pth.tar'))
             print("Save model at {}\n".format(os.path.join(save_dir, 'models', saveName + '_epoch-' + str(epoch) + '.pth.tar')))
 
-        if useTest and epoch % test_interval == (test_interval - 1):
-            model.eval()
-            start_time = timeit.default_timer()
+        # if useTest and epoch % test_interval == (test_interval - 1):
+        #     model.eval()
+        #     start_time = timeit.default_timer()
 
-            running_loss = 0.0
-            running_corrects = 0.0
+        #     running_loss = 0.0
+        #     running_corrects = 0.0
 
-            for inputs, labels in tqdm(test_dataloader):
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+        #     for inputs, labels in tqdm(test_dataloader):
+        #         inputs = inputs.to(device)
+        #         labels = labels.to(device)
 
-                with torch.no_grad():
-                    outputs = model(inputs)
-                probs = nn.Softmax(dim=1)(outputs)
-                preds = torch.max(probs, 1)[1]
-                loss = criterion(outputs, labels)
+        #         with torch.no_grad():
+        #             outputs = model(inputs)
+        #         probs = nn.Softmax(dim=1)(outputs)
+        #         preds = torch.max(probs, 1)[1]
+        #         loss = criterion(outputs, labels)
 
-                running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
+        #         running_loss += loss.item() * inputs.size(0)
+        #         running_corrects += torch.sum(preds == labels.data)
 
-            epoch_loss = running_loss / test_size
-            epoch_acc = running_corrects.double() / test_size
+        #     epoch_loss = running_loss / test_size
+        #     epoch_acc = running_corrects.double() / test_size
 
-            writer.add_scalar('data/test_loss_epoch', epoch_loss, epoch)
-            writer.add_scalar('data/test_acc_epoch', epoch_acc, epoch)
+        #     writer.add_scalar('data/test_loss_epoch', epoch_loss, epoch)
+        #     writer.add_scalar('data/test_acc_epoch', epoch_acc, epoch)
 
-            print("[test] Epoch: {}/{} Loss: {} Acc: {}".format(epoch+1, nEpochs, epoch_loss, epoch_acc))
-            stop_time = timeit.default_timer()
-            print("Execution time: " + str(stop_time - start_time) + "\n")
+        #     print("[test] Epoch: {}/{} Loss: {} Acc: {}".format(epoch+1, nEpochs, epoch_loss, epoch_acc))
+        #     stop_time = timeit.default_timer()
+        #     print("Execution time: " + str(stop_time - start_time) + "\n")
 
     # DrawResult(total_accur,total_loss, writer)
     writer.close()
