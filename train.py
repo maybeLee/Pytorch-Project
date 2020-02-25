@@ -25,7 +25,7 @@ resume_epoch = 0  # Default is 0, change if want to resume
 useTest = True # See evolution of the test set when training
 nTestInterval = 20 # Run on test set every nTestInterval epochs
 snapshot = 5000 # Store a model every snapshot epochs
-lr = 1e-4 # Learning rate
+lr = 3e-4 # Learning rate
 
 dataset = 'Behavior_Data' # Options: hmdb51 or ucf101
 
@@ -74,7 +74,7 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
         print('We only implemented C3D and R2Plus1D models.')
         raise NotImplementedError
     criterion = nn.CrossEntropyLoss()  # standard crossentropy loss for classification
-    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=1e-2)
+    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=1e-3)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10,
                                           gamma=1)  # the scheduler divides the lr by 10 every 10 epochs
 

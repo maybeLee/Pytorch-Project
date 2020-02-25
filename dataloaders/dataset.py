@@ -175,6 +175,7 @@ class VideoDataset(Dataset):
                     frame = cv2.resize(frame, (self.resize_width, self.resize_height))
                 cv2.imwrite(filename=os.path.join(save_dir, video_filename, '0000{}.jpg'.format(str(i))), img=frame)
                 i += 1
+
             count += 1
 
         # Release the VideoCapture once it is no longer needed
