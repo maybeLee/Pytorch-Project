@@ -74,7 +74,7 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
         print('We only implemented C3D and R2Plus1D models.')
         raise NotImplementedError
     criterion = nn.CrossEntropyLoss()  # standard crossentropy loss for classification
-    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=1e-3)
+    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=2e-3)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10,
                                           gamma=1)  # the scheduler divides the lr by 10 every 10 epochs
 

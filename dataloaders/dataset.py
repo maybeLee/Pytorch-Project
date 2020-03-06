@@ -117,7 +117,8 @@ class VideoDataset(Dataset):
 
             test_and_valid, train = train_test_split(video_files, test_size=0.6, random_state=42)
             val, test = train_test_split(test_and_valid, test_size=0.01, random_state=42)
-
+            # val += train[:10]
+            
             train_dir = os.path.join(self.output_dir, 'train', file)
             val_dir = os.path.join(self.output_dir, 'val', file)
             test_dir = os.path.join(self.output_dir, 'test', file)
