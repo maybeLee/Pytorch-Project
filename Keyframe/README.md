@@ -1,1 +1,5 @@
-# This is a readme about how we conduct Keyframe Method
+# This is a README about how we conduct Keyframe Method
+
+## How we conduct
+
+## How to use
