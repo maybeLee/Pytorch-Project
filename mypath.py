@@ -22,4 +22,4 @@ class Path(object):
 
     @staticmethod
     def model_dir():
-        return '/path/to/Models/c3d-pretrained.pth'
+        return './pretrained_model/c3d-pretrained.pth'

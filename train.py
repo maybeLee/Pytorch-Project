@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
 from dataloaders.dataset import VideoDataset
-from network import C3D_model, R2Plus1D_model, R3D_model
+from network import C3D_model
 
 # Use GPU if available else revert to CPU
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -60,23 +60,17 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
     """
 
     if modelName == 'C3D':
-        model = C3D_model.C3D(num_classes=num_classes, pretrained=False)
-        train_params = [{'params': C3D_model.get_1x_lr_params(model), 'lr': lr},
-                        {'params': C3D_model.get_10x_lr_params(model), 'lr': lr * 10}]
-    elif modelName == 'R2Plus1D':
-        model = R2Plus1D_model.R2Plus1DClassifier(num_classes=num_classes, layer_sizes=(2, 2, 2, 2))
-        train_params = [{'params': R2Plus1D_model.get_1x_lr_params(model), 'lr': lr},
-                        {'params': R2Plus1D_model.get_10x_lr_params(model), 'lr': lr * 10}]
-    elif modelName == 'R3D':
-        model = R3D_model.R3DClassifier(num_classes=num_classes, layer_sizes=(2, 2, 2, 2))
-        train_params = model.parameters()
+        model = C3D_model.C3D(num_classes=num_classes, pretrained=True)
+        # train_params = [{'params': C3D_model.get_1x_lr_params(model), 'lr': lr},
+        #                 {'params': C3D_model.get_10x_lr_params(model), 'lr': lr * 10}]
+        train_params = [{'params': C3D_model.get_10x_lr_params(model), 'lr': lr * 10}]
     else:
-        print('We only implemented C3D and R2Plus1D models.')
+        print('We only implemented C3D models.')
         raise NotImplementedError
     criterion = nn.CrossEntropyLoss()  # standard crossentropy loss for classification
-    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=2e-3)
+    optimizer = optim.SGD(train_params, lr=lr, momentum=0.9, weight_decay=8e-3)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10,
-                                          gamma=1)  # the scheduler divides the lr by 10 every 10 epochs
+                                          gamma=0.1)  # the scheduler divides the lr by 10 every 10 epochs
 
     if resume_epoch == 0:
         print("Training {} from scratch...".format(modelName))
@@ -133,14 +127,17 @@ def train_model(dataset=dataset, save_dir=save_dir, num_classes=num_classes, lr=
                 optimizer.zero_grad()
                 loss1 = 0
                 if phase == 'train':
-                    (outputs, loss1) = model(inputs)
+                    # (outputs, loss1) = model(inputs)
+                    outputs = model(inputs)
                 else:
                     with torch.no_grad():
-                        outputs, loss1 = model(inputs)
+                        # outputs, loss1 = model(inputs)
+                        outputs = model(inputs)
 
                 probs = nn.Softmax(dim=1)(outputs)
                 preds = torch.max(probs, 1)[1]
-                loss = loss1 + criterion(outputs, labels)
+                # loss = loss1 + criterion(outputs, labels)
+                loss = criterion(outputs, labels)
 
                 if phase == 'train':
                     loss.backward()

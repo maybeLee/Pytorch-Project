@@ -9,19 +9,19 @@ class C3D(nn.Module):
 
     def __init__(self, num_classes, pretrained=False):
         super(C3D, self).__init__()
-        # 设置关键帧权值的参数
-        # 输入[batch, 3, 10, 112, 112]
-        self.conv_1 = nn.Conv3d(3, 3, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool_1 = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
-        # 输出[batch, 3, 10, 56, 56]
+        # # 设置关键帧权值的参数
+        # # 输入[batch, 3, 10, 112, 112]
+        # self.conv_1 = nn.Conv3d(3, 3, kernel_size=(3, 3, 3), padding=(1, 1, 1))
+        # self.pool_1 = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
+        # # 输出[batch, 3, 10, 56, 56]
 
-        self.conv_2 = nn.Conv3d(3, 16, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool_2 = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
-        # 输出[batch, 16, 10, 28, 28]
-        # 首先对数据维度交换 输出[batch, 10, 16, 28, 28] permute(0, 2, 1, 3, 4)
-        # 随后将输出改为[batch, 10, 16*28*28]
-        self.fc_1 = nn.Linear(16*28*28, 4*28*28)
-        self.fc_2 = nn.Linear(4*28*28, 1)
+        # self.conv_2 = nn.Conv3d(3, 16, kernel_size=(3, 3, 3), padding=(1, 1, 1))
+        # self.pool_2 = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
+        # # 输出[batch, 16, 10, 28, 28]
+        # # 首先对数据维度交换 输出[batch, 10, 16, 28, 28] permute(0, 2, 1, 3, 4)
+        # # 随后将输出改为[batch, 10, 16*28*28]
+        # self.fc_1 = nn.Linear(16*28*28, 4*28*28)
+        # self.fc_2 = nn.Linear(4*28*28, 1)
 
         self.conv1 = nn.Conv3d(3, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1))
         self.pool1 = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
@@ -55,26 +55,26 @@ class C3D(nn.Module):
             self.__load_pretrained_weights()
 
     def forward(self, x):
-        x1 = x.clone()
-        x1 = self.relu(self.conv_1(x1))
-        x1 = self.pool_1(x1)
-        x1 = self.relu(self.conv_2(x1))
-        x1 = self.pool_2(x1)
-        x1 = self.dropout(x1)
-        x1 = x1.permute(0, 2, 1, 3, 4)
-        x1 = x1.reshape([-1, 10, 12544])
+        # x1 = x.clone()
+        # x1 = self.relu(self.conv_1(x1))
+        # x1 = self.pool_1(x1)
+        # x1 = self.relu(self.conv_2(x1))
+        # x1 = self.pool_2(x1)
+        # x1 = self.dropout(x1)
+        # x1 = x1.permute(0, 2, 1, 3, 4)
+        # x1 = x1.reshape([-1, 10, 12544])
 
-        x1 = self.relu(self.fc_1(x1))
-        x1 = self.fc_2(x1)#输出是[batch, 10, 1]
-        x1 = x1.view(-1, 10)
-        k = x1.clone()
-        x1 = nn.Softmax(dim=1)(k)#Softmax 一下
-        #这里应该要算一个sparsity loss
-        temp = x.clone()
-        batch = len(temp)
-        for i in range(batch):
-          for j in range(10):
-            x[i,:,j] = temp[i,:,j]*x1[i,j]
+        # x1 = self.relu(self.fc_1(x1))
+        # x1 = self.fc_2(x1)#输出是[batch, 10, 1]
+        # x1 = x1.view(-1, 10)
+        # k = x1.clone()
+        # x1 = nn.Softmax(dim=1)(k)#Softmax 一下
+        # #这里应该要算一个sparsity loss
+        # temp = x.clone()
+        # batch = len(temp)
+        # for i in range(batch):
+        #   for j in range(10):
+        #     x[i,:,j] = temp[i,:,j]*x1[i,j]
         
             
         # print(x.size())
@@ -103,7 +103,8 @@ class C3D(nn.Module):
 
         logits = self.fc8(x)
 
-        return logits, sum(sum(x1))
+        # return logits, sum(sum(x1))
+        return logits
 
     def __load_pretrained_weights(self):
         """Initialiaze network."""
@@ -162,8 +163,10 @@ def get_1x_lr_params(model):
     """
     This generator returns all the parameters for conv and two fc layers of the net.
     """
-    b = [model.conv_1, model.pool_1, model.conv_2, model.pool_2, model.fc_1, model.fc_2, 
-    model.conv1, model.conv2, model.conv3a, model.conv3b, model.conv4a, model.conv4b,
+    # b = [model.conv_1, model.pool_1, model.conv_2, model.pool_2, model.fc_1, model.fc_2, 
+    # model.conv1, model.conv2, model.conv3a, model.conv3b, model.conv4a, model.conv4b,
+    #      model.conv5a, model.conv5b, model.fc6, model.fc7]
+    b = [model.conv1, model.conv2, model.conv3a, model.conv3b, model.conv4a, model.conv4b,
          model.conv5a, model.conv5b, model.fc6, model.fc7]
     for i in range(len(b)):
         for k in b[i].parameters():
